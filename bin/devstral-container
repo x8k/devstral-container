@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Function to show usage
 show_usage() {
-    cat << EOF
+  cat <<EOF
 Usage: devstral-container [OPTIONS] [COMMAND]
 
 Run Devstral Vibe CLI in a containerized environment with optional API logging.
@@ -48,37 +48,37 @@ DRY_RUN=false
 VIBE_COMMAND=""
 
 while [[ $# -gt 0 ]]; do
-    case $1 in
-        --proxy)
-            ENABLE_PROXY=true
-            shift
-            ;;
-        --no-proxy)
-            ENABLE_PROXY=false
-            shift
-            ;;
-        --datasette)
-            ENABLE_PROXY=true
-            ENABLE_DATASETTE=true
-            shift
-            ;;
-        --migrate-logs)
-            MIGRATE_LOGS=true
-            shift
-            ;;
-        --dry-run)
-            DRY_RUN=true
-            shift
-            ;;
-        -h|--help)
-            show_usage
-            exit 0
-            ;;
-        *)
-            VIBE_COMMAND="$1"
-            shift
-            ;;
-    esac
+  case $1 in
+  --proxy)
+    ENABLE_PROXY=true
+    shift
+    ;;
+  --no-proxy)
+    ENABLE_PROXY=false
+    shift
+    ;;
+  --datasette)
+    ENABLE_PROXY=true
+    ENABLE_DATASETTE=true
+    shift
+    ;;
+  --migrate-logs)
+    MIGRATE_LOGS=true
+    shift
+    ;;
+  --dry-run)
+    DRY_RUN=true
+    shift
+    ;;
+  -h | --help)
+    show_usage
+    exit 0
+    ;;
+  *)
+    VIBE_COMMAND="$1"
+    shift
+    ;;
+  esac
 done
 
 # Create config directory if it doesn't exist
@@ -87,27 +87,27 @@ mkdir -p "${CONFIG_DIR}/proxy"
 
 # Handle log migration
 if [[ "$MIGRATE_LOGS" == true ]]; then
-    VERSION="${DEVSTRAL_CONTAINER_VERSION:-4}"
-    DATASETTE_IMAGE="nezhar/devstral-datasette:${VERSION}"
+  VERSION="${DEVSTRAL_CONTAINER_VERSION:-4}"
+  DATASETTE_IMAGE="nezhar/devstral-datasette:${VERSION}"
 
-    if [[ ! -f "${CONFIG_DIR}/proxy/logs.db" ]]; then
-        echo -e "${YELLOW}No logs database found at ${CONFIG_DIR}/proxy/logs.db${NC}"
-        exit 1
-    fi
+  if [[ ! -f "${CONFIG_DIR}/proxy/logs.db" ]]; then
+    echo -e "${YELLOW}No logs database found at ${CONFIG_DIR}/proxy/logs.db${NC}"
+    exit 1
+  fi
 
-    MIGRATE_ARGS=("/data/logs.db")
-    if [[ "$DRY_RUN" == true ]]; then
-        MIGRATE_ARGS+=("--dry-run")
-        echo -e "${GREEN}Previewing migration (dry run)...${NC}"
-    else
-        echo -e "${GREEN}Migrating streaming logs to compacted format...${NC}"
-    fi
+  MIGRATE_ARGS=("/data/logs.db")
+  if [[ "$DRY_RUN" == true ]]; then
+    MIGRATE_ARGS+=("--dry-run")
+    echo -e "${GREEN}Previewing migration (dry run)...${NC}"
+  else
+    echo -e "${GREEN}Migrating streaming logs to compacted format...${NC}"
+  fi
 
-    docker run --rm \
-        -v "${CONFIG_DIR}/proxy:/data" \
-        "$DATASETTE_IMAGE" \
-        migrate-logs "${MIGRATE_ARGS[@]}"
-    exit 0
+  docker run --rm \
+    -v "${CONFIG_DIR}/proxy:/data" \
+    "$DATASETTE_IMAGE" \
+    migrate-logs "${MIGRATE_ARGS[@]}"
+  exit 0
 fi
 
 # Store the original working directory before changing to project dir
@@ -120,42 +120,42 @@ CONFIG_FILE="${CONFIG_DIR}/config/.vibe/config.toml"
 CONFIG_BACKUP="${CONFIG_DIR}/config/.vibe/config.toml.backup"
 
 if [[ "$ENABLE_PROXY" == true ]]; then
-    echo -e "${GREEN}Starting with API logging enabled${NC}"
+  echo -e "${GREEN}Starting with API logging enabled${NC}"
 
-    # Backup existing config if it exists and hasn't been backed up yet
-    if [[ -f "$CONFIG_FILE" ]] && [[ ! -f "$CONFIG_BACKUP" ]]; then
-        cp "$CONFIG_FILE" "$CONFIG_BACKUP"
-    fi
+  # Backup existing config if it exists and hasn't been backed up yet
+  if [[ -f "$CONFIG_FILE" ]] && [[ ! -f "$CONFIG_BACKUP" ]]; then
+    cp "$CONFIG_FILE" "$CONFIG_BACKUP"
+  fi
 
-    # Create or update config.toml with proxy provider
-    cat > "$CONFIG_FILE" << 'EOF'
+  # Create or update config.toml with proxy provider
+  cat >"$CONFIG_FILE" <<'EOF'
 # Mistral Vibe configuration with proxy enabled
 # Original config backed up to config.toml.backup
 
 [[providers]]
 name = "mistral"
 api_base = "http://devstral-proxy:8080/v1"
-api_key_env_var = "MISTRAL_API_KEY"
+api_key_env_var = "AMISTRAL_API_KEY"
 api_style = "openai"
 backend = "generic"
 EOF
 
-    if [[ "$ENABLE_DATASETTE" == true ]]; then
-        echo -e "${GREEN}Datasette will be available at http://localhost:8001${NC}"
-    fi
+  if [[ "$ENABLE_DATASETTE" == true ]]; then
+    echo -e "${GREEN}Datasette will be available at http://localhost:8001${NC}"
+  fi
 else
-    # Restore original config if backup exists, otherwise remove proxy config
-    if [[ -f "$CONFIG_BACKUP" ]]; then
-        mv "$CONFIG_BACKUP" "$CONFIG_FILE"
-    elif [[ -f "$CONFIG_FILE" ]]; then
-        # Remove proxy config so vibe uses its defaults (direct to Mistral)
-        rm "$CONFIG_FILE"
-    fi
+  # Restore original config if backup exists, otherwise remove proxy config
+  if [[ -f "$CONFIG_BACKUP" ]]; then
+    mv "$CONFIG_BACKUP" "$CONFIG_FILE"
+  elif [[ -f "$CONFIG_FILE" ]]; then
+    # Remove proxy config so vibe uses its defaults (direct to Mistral)
+    rm "$CONFIG_FILE"
+  fi
 fi
 
 # Set image details
 VERSION="${DEVSTRAL_CONTAINER_VERSION:-0.1.4}"
-IMAGE="nezhar/devstral-cli:${VERSION}"
+IMAGE="devstral-image"
 PROXY_IMAGE="nezhar/devstral-proxy:${VERSION}"
 DATASETTE_IMAGE="nezhar/devstral-datasette:${VERSION}"
 NETWORK_NAME="devstral-network"
@@ -164,65 +164,81 @@ DATASETTE_CONTAINER_NAME="devstral-datasette"
 
 # Start background services if needed
 if [[ "$ENABLE_PROXY" == true ]]; then
-    echo -e "${YELLOW}Starting proxy services...${NC}"
+  echo -e "${YELLOW}Starting proxy services...${NC}"
 
-    # Create network if it doesn't exist
-    docker network create "$NETWORK_NAME" 2>/dev/null || true
+  # Create network if it doesn't exist
+  docker network create "$NETWORK_NAME" 2>/dev/null || true
 
-    # Start proxy container
+  # Start proxy container
+  docker run -d --rm \
+    --name "$PROXY_CONTAINER_NAME" \
+    --network "$NETWORK_NAME" \
+    -p 8080:8080 \
+    -v "${CONFIG_DIR}/proxy:/proxy/logs" \
+    "$PROXY_IMAGE" 2>/dev/null || true
+
+  if [[ "$ENABLE_DATASETTE" == true ]]; then
+    # Start datasette container
     docker run -d --rm \
-        --name "$PROXY_CONTAINER_NAME" \
-        --network "$NETWORK_NAME" \
-        -p 8080:8080 \
-        -v "${CONFIG_DIR}/proxy:/proxy/logs" \
-        "$PROXY_IMAGE" 2>/dev/null || true
+      --name "$DATASETTE_CONTAINER_NAME" \
+      --network "$NETWORK_NAME" \
+      -p 8001:8001 \
+      -v "${CONFIG_DIR}/proxy:/data" \
+      "$DATASETTE_IMAGE" 2>/dev/null || true
 
-    if [[ "$ENABLE_DATASETTE" == true ]]; then
-        # Start datasette container
-        docker run -d --rm \
-            --name "$DATASETTE_CONTAINER_NAME" \
-            --network "$NETWORK_NAME" \
-            -p 8001:8001 \
-            -v "${CONFIG_DIR}/proxy:/data" \
-            "$DATASETTE_IMAGE" 2>/dev/null || true
+    echo -e "${GREEN}Datasette will be available at http://localhost:8001${NC}"
+  fi
 
-        echo -e "${GREEN}Datasette will be available at http://localhost:8001${NC}"
-    fi
-
-    # Wait for proxy to be ready
-    sleep 2
+  # Wait for proxy to be ready
+  sleep 2
 fi
 
 # Prepare docker run command
 DOCKER_ARGS=(
-    --rm -it
-    --user "$(id -u):$(id -g)"
-    -v "${WORKSPACE_DIR}:/workspace"
-    -v "${CONFIG_DIR}/config:/config"
-    -e "HOME=/config"
+  --rm -it
+  --user "$(id -u):$(id -g)"
+  -v "${WORKSPACE_DIR}:/workspace"
+  -v "${CONFIG_DIR}/config:/config"
+  -e "HOME=/config"
 )
 
 # Add network configuration if proxy is enabled
 if [[ "$ENABLE_PROXY" == true ]]; then
-    DOCKER_ARGS+=(
-        --network "$NETWORK_NAME"
-    )
+  DOCKER_ARGS+=(
+    --network "$NETWORK_NAME"
+  )
 fi
 
+# Prepare skills and agents
+
+echo "Preparing skills"
+for D in skills agents; do
+  PROPDIR="${CONFIG_DIR}/config/.vibe/${D}"
+
+  echo "Removing $D if exist"
+  [ -d "$PROPDIR" ] && rm -rf "$PROPDIR"
+
+  echo "Add $D if exist from $HOME/ai/$D"
+  cp -r "${HOME}/ai/${D}" "$PROPDIR"
+done
+
 # Run the CLI
+
+NAME="$(basename $(pwd))_vibegarden"
+
 if [[ -z "$VIBE_COMMAND" ]]; then
-    # Interactive mode
-    docker run "${DOCKER_ARGS[@]}" "$IMAGE"
+  # Interactive mode
+  docker run --name "$NAME" "${DOCKER_ARGS[@]}" "$IMAGE"
 else
-    # Command mode
-    docker run "${DOCKER_ARGS[@]}" "$IMAGE" vibe "$VIBE_COMMAND"
+  # Command mode
+  docker run --name "$NAME" "${DOCKER_ARGS[@]}" "$IMAGE" vibe "$VIBE_COMMAND"
 fi
 
 # Cleanup
 if [[ "$ENABLE_PROXY" == true ]]; then
-    echo -e "${YELLOW}Proxy services are still running. To stop them, run:${NC}"
-    echo -e "${YELLOW}  docker stop $PROXY_CONTAINER_NAME${NC}"
-    if [[ "$ENABLE_DATASETTE" == true ]]; then
-        echo -e "${YELLOW}  docker stop $DATASETTE_CONTAINER_NAME${NC}"
-    fi
+  echo -e "${YELLOW}Proxy services are still running. To stop them, run:${NC}"
+  echo -e "${YELLOW}  docker stop $PROXY_CONTAINER_NAME${NC}"
+  if [[ "$ENABLE_DATASETTE" == true ]]; then
+    echo -e "${YELLOW}  docker stop $DATASETTE_CONTAINER_NAME${NC}"
+  fi
 fi
