@@ -212,14 +212,14 @@ fi
 # Prepare skills and agents
 
 echo "Preparing skills"
-for D in skills agents; do
+for D in skills agents master; do
   PROPDIR="${CONFIG_DIR}/config/.vibe/${D}"
 
   echo "Removing $D if exist"
   [ -d "$PROPDIR" ] && rm -rf "$PROPDIR"
 
   echo "Add $D if exist from $HOME/ai/$D"
-  cp -r "${HOME}/ai/${D}" "$PROPDIR"
+  cp -rH "${HOME}/ai/${D}" "$PROPDIR"
 done
 
 # Run the CLI
