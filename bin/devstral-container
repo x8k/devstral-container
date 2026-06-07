@@ -218,8 +218,8 @@ for D in skills agents master; do
   echo "Removing $D if exist"
   [ -d "$PROPDIR" ] && rm -rf "$PROPDIR"
 
-  echo "Add $D if exist from $HOME/ai/$D"
-  cp -rH "${HOME}/ai/${D}" "$PROPDIR"
+  echo "Add $D if exist from $HOME/.vibe/$D"
+  cp -rH "${HOME}/.vibe/${D}" "$PROPDIR"
 done
 
 # Run the CLI
